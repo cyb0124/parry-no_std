@@ -1,6 +1,6 @@
 use crate::math::{Real, Vector};
 use crate::shape::{Cuboid, PolygonalFeature, Segment, SupportMap, Triangle};
-use na::Unit;
+use na::{ComplexField, RealField, Unit};
 #[cfg(feature = "dim3")]
 use {
     crate::{

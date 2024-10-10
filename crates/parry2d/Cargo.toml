@@ -52,12 +52,12 @@ cust_core = { version = "0.1", optional = true }
 ordered-float = { version = "4", default-features = false }
 log = "0.4"
 hashbrown = "0.15.0"
-spade = { version = "2.9", default-features = false }
+spade = { path = "D:/spade-no_std", default-features = false }
 
 [dev-dependencies]
 simba = { version = "0.9", default-features = false }
 oorandom = "11"
-ptree = "0.4.0"
+ptree = "0.5.0"
 rand = { version = "0.8" }
 macroquad = "0.4.12"
 

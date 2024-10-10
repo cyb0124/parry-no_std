@@ -1,7 +1,7 @@
 use crate::math::{Isometry, Point, Real, Rotation, Vector};
 use crate::shape::{Segment, SupportMap};
 use either::Either;
-use na::Unit;
+use na::{ComplexField, Unit};
 
 #[derive(Copy, Clone, Debug)]
 #[repr(C)]

@@ -1,6 +1,6 @@
 use crate::math::Real;
 use crate::shape::{SegmentPointLocation, Triangle, TriangleOrientation};
-use na::Point2;
+use na::{ComplexField, Point2};
 
 /// Intersection between two segments.
 pub enum SegmentsIntersection {

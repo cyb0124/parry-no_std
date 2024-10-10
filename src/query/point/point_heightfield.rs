@@ -2,6 +2,7 @@ use crate::bounding_volume::Aabb;
 use crate::math::{Point, Real, Vector};
 use crate::query::{PointProjection, PointQuery, PointQueryWithLocation};
 use crate::shape::{FeatureId, HeightField, TrianglePointLocation};
+use na::ComplexField;
 
 impl PointQuery for HeightField {
     fn project_local_point_with_max_dist(

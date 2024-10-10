@@ -4,7 +4,7 @@ use crate::math::{Matrix, Point, Real};
 use crate::shape::{Segment, Triangle};
 use crate::utils;
 use core::mem;
-use na::Matrix3;
+use na::{ComplexField, Matrix3};
 
 /// A tetrahedron with 4 vertices.
 #[derive(Copy, Clone, Debug)]

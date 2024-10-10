@@ -7,7 +7,7 @@ use crate::utils;
 use alloc::collections::BTreeMap;
 use alloc::{vec, vec::Vec};
 use hashbrown::HashSet;
-use na::{Point3, Vector3};
+use na::{ComplexField, Point3, Vector3};
 use rstar::RTree;
 use spade::{ConstrainedDelaunayTriangulation, InsertionError, Triangulation as _};
 

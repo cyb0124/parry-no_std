@@ -5,7 +5,7 @@ use crate::math::{Isometry, Point, Real, UnitVector, Vector, DIM, TWO_DIM};
 use crate::shape::{Cuboid, SupportMap};
 use crate::utils::IsometryOps;
 use arrayvec::ArrayVec;
-use na;
+use na::{self, ComplexField};
 use num::Bounded;
 
 use crate::query::{Ray, RayCast};

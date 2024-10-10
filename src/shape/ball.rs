@@ -1,8 +1,7 @@
-use either::Either;
-use na::Unit;
-
 use crate::math::{Isometry, Point, Real, Vector};
 use crate::shape::SupportMap;
+use either::Either;
+use na::{ComplexField, Unit};
 
 /// A Ball shape.
 #[derive(PartialEq, Debug, Copy, Clone)]

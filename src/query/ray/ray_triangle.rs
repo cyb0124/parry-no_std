@@ -3,6 +3,7 @@ use crate::math::Real;
 use crate::math::Vector;
 use crate::query::{Ray, RayCast, RayIntersection};
 use crate::shape::{FeatureId, Triangle};
+use na::ComplexField;
 #[cfg(feature = "dim3")]
 use {crate::math::Point, na::Vector3};
 

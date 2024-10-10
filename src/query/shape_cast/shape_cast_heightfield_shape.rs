@@ -5,6 +5,7 @@ use crate::query::{QueryDispatcher, Ray, ShapeCastHit, Unsupported};
 use crate::shape::{HeightField, Shape};
 #[cfg(feature = "dim3")]
 use crate::{bounding_volume::Aabb, query::RayCast};
+use na::ComplexField;
 
 /// Time Of Impact between a moving shape and a heightfield.
 #[cfg(feature = "dim2")]

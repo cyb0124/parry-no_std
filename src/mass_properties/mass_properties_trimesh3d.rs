@@ -1,6 +1,7 @@
 use crate::mass_properties::MassProperties;
 use crate::math::{Matrix, Point, Real, DIM};
 use crate::shape::Tetrahedron;
+use na::ComplexField;
 use num::Zero;
 
 impl MassProperties {

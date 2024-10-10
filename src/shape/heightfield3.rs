@@ -3,7 +3,7 @@ use crate::math::{Real, Vector};
 use crate::shape::{FeatureId, Triangle, TrianglePseudoNormals};
 use core::ops::Range;
 use na::DMatrix;
-use na::{Point3, Unit};
+use na::{ComplexField, Point3, Unit};
 
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 /// The status of the cell of an heightfield.
