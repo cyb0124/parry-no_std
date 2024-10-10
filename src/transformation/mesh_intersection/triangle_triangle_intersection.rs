@@ -4,6 +4,7 @@ use crate::query;
 use crate::shape::{FeatureId, Segment, Triangle};
 use crate::transformation::polygon_intersection::PolylinePointLocation;
 use crate::utils::WBasis;
+use alloc::{vec, vec::Vec};
 
 #[derive(Copy, Clone, Debug, Default)]
 pub struct TriangleTriangleIntersectionPoint {

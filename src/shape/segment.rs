@@ -2,21 +2,10 @@
 
 use crate::math::{Isometry, Point, Real, Vector};
 use crate::shape::{FeatureId, SupportMap};
-
+use core::mem;
 use na::{self, Unit};
-use std::mem;
-
-#[cfg(feature = "rkyv")]
-use rkyv::{bytecheck, CheckBytes};
 
 /// A segment shape.
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "bytemuck", derive(bytemuck::Pod, bytemuck::Zeroable))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize, CheckBytes),
-    archive(as = "Self")
-)]
 #[derive(PartialEq, Debug, Copy, Clone)]
 #[repr(C)]
 pub struct Segment {

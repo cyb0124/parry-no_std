@@ -5,10 +5,11 @@ use crate::query::gjk::{self, CSOPoint, ConstantOrigin, VoronoiSimplex};
 use crate::query::PointQueryWithLocation;
 use crate::shape::{SupportMap, Triangle, TrianglePointLocation};
 use crate::utils;
+use alloc::collections::BinaryHeap;
+use alloc::vec::Vec;
+use core::cmp::Ordering;
 use na::{self, Unit};
 use num::Bounded;
-use std::cmp::Ordering;
-use std::collections::BinaryHeap;
 
 #[derive(Copy, Clone, PartialEq)]
 struct FaceId {
@@ -116,9 +117,9 @@ impl Face {
         )
     }
 
-    pub fn contains_point(&self, id: usize) -> bool {
-        self.pts[0] == id || self.pts[1] == id || self.pts[2] == id
-    }
+    // pub fn contains_point(&self, id: usize) -> bool {
+    //     self.pts[0] == id || self.pts[1] == id || self.pts[2] == id
+    // }
 
     pub fn next_ccw_pt_id(&self, id: usize) -> usize {
         if self.pts[0] == id {
@@ -451,68 +452,6 @@ impl EPA {
                 self.compute_silhouette(point, adj1, adj_opp_pt_id1);
                 self.compute_silhouette(point, adj2, adj_opp_pt_id2);
             }
-        }
-    }
-
-    #[allow(dead_code)]
-    fn print_silhouette(&self) {
-        print!("Silhouette points: ");
-        for i in 0..self.silhouette.len() {
-            let edge = &self.silhouette[i];
-            let face = &self.faces[edge.face_id];
-
-            if !face.deleted {
-                print!(
-                    "({}, {}) ",
-                    face.pts[(edge.opp_pt_id + 2) % 3],
-                    face.pts[(edge.opp_pt_id + 1) % 3]
-                );
-            }
-        }
-        println!();
-    }
-
-    #[allow(dead_code)]
-    fn check_topology(&self) {
-        for i in 0..self.faces.len() {
-            let face = &self.faces[i];
-            if face.deleted {
-                continue;
-            }
-
-            // println!("checking {}-th face.", i);
-            let adj1 = &self.faces[face.adj[0]];
-            let adj2 = &self.faces[face.adj[1]];
-            let adj3 = &self.faces[face.adj[2]];
-
-            assert!(!adj1.deleted);
-            assert!(!adj2.deleted);
-            assert!(!adj3.deleted);
-
-            assert!(face.pts[0] != face.pts[1]);
-            assert!(face.pts[0] != face.pts[2]);
-            assert!(face.pts[1] != face.pts[2]);
-
-            assert!(adj1.contains_point(face.pts[0]));
-            assert!(adj1.contains_point(face.pts[1]));
-
-            assert!(adj2.contains_point(face.pts[1]));
-            assert!(adj2.contains_point(face.pts[2]));
-
-            assert!(adj3.contains_point(face.pts[2]));
-            assert!(adj3.contains_point(face.pts[0]));
-
-            let opp_pt_id1 = adj1.next_ccw_pt_id(face.pts[0]);
-            let opp_pt_id2 = adj2.next_ccw_pt_id(face.pts[1]);
-            let opp_pt_id3 = adj3.next_ccw_pt_id(face.pts[2]);
-
-            assert!(!face.contains_point(adj1.pts[opp_pt_id1]));
-            assert!(!face.contains_point(adj2.pts[opp_pt_id2]));
-            assert!(!face.contains_point(adj3.pts[opp_pt_id3]));
-
-            assert!(adj1.adj[(opp_pt_id1 + 1) % 3] == i);
-            assert!(adj2.adj[(opp_pt_id2 + 1) % 3] == i);
-            assert!(adj3.adj[(opp_pt_id3 + 1) % 3] == i);
         }
     }
 }

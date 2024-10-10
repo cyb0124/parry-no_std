@@ -2,26 +2,11 @@
 
 use crate::math::{Point, Real, Vector};
 use crate::shape::SupportMap;
+use either::Either;
 use na;
 use num::Zero;
 
-#[cfg(feature = "std")]
-use either::Either;
-
-#[cfg(not(feature = "std"))]
-use na::RealField; // for .copysign()
-
-#[cfg(feature = "rkyv")]
-use rkyv::{bytecheck, CheckBytes};
-
 /// Cone shape with its principal axis aligned with the `y` axis.
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "bytemuck", derive(bytemuck::Pod, bytemuck::Zeroable))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize, CheckBytes),
-    archive(as = "Self")
-)]
 #[derive(PartialEq, Debug, Copy, Clone)]
 #[repr(C)]
 pub struct Cone {
@@ -50,7 +35,6 @@ impl Cone {
     /// cone. Instead, a convex polyhedral approximation (with `nsubdivs`
     /// subdivisions) is returned. Returns `None` if that approximation had degenerate
     /// normals (for example if the scaling factor along one axis is zero).
-    #[cfg(feature = "std")]
     #[inline]
     pub fn scaled(
         self,

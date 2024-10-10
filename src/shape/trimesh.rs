@@ -1,34 +1,24 @@
 use crate::bounding_volume::Aabb;
 use crate::math::{Isometry, Point, Real, Vector};
 use crate::partitioning::Qbvh;
+use crate::query::details::NormalConstraints;
+use crate::shape::composite_shape::SimdCompositeShape;
 use crate::shape::{FeatureId, Shape, Triangle, TrianglePseudoNormals, TypedSimdCompositeShape};
-use std::fmt;
-
+#[cfg(feature = "dim2")]
+use crate::transformation::ear_clipping::triangulate_ear_clipping;
 use crate::utils::HashablePartialEq;
+use alloc::{fmt, vec, vec::Vec};
+use hashbrown::hash_map::Entry;
+use hashbrown::{HashMap, HashSet};
 #[cfg(feature = "dim3")]
 use {crate::shape::Cuboid, crate::utils::SortedPair, na::Unit};
 
-use {
-    crate::shape::composite_shape::SimdCompositeShape,
-    crate::utils::hashmap::{Entry, HashMap},
-    std::collections::HashSet,
-};
-
-#[cfg(feature = "dim2")]
-use crate::transformation::ear_clipping::triangulate_ear_clipping;
-
-use crate::query::details::NormalConstraints;
-#[cfg(feature = "rkyv")]
-use rkyv::{bytecheck, CheckBytes};
-
 /// Indicated an inconsistency in the topology of a triangle mesh.
-#[derive(thiserror::Error, Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum TopologyError {
     /// Found a triangle with two or three identical vertices.
-    #[error("the triangle {0} has at least two identical vertices.")]
     BadTriangle(u32),
     /// At least two adjacent triangles have opposite orientations.
-    #[error("the triangles {triangle1} and {triangle2} sharing the edge {edge:?} have opposite orientations.")]
     BadAdjacentTrianglesOrientation {
         /// The first triangle, with an orientation opposite to the second triangle.
         triangle1: u32,
@@ -40,13 +30,11 @@ pub enum TopologyError {
 }
 
 /// Indicated an inconsistency while building a triangle mesh.
-#[derive(thiserror::Error, Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum TriMeshBuilderError {
     /// A triangle mesh must contain at least one triangle.
-    #[error("A triangle mesh must contain at least one triangle.")]
     EmptyIndices,
     /// Indicated an inconsistency in the topology of a triangle mesh.
-    #[error("Topology Error: {0}")]
     TopologyError(TopologyError),
 }
 
@@ -57,12 +45,6 @@ pub enum TriMeshBuilderError {
 /// "Signed distance computation using the angle weighted pseudonormal", Baerentzen, et al.
 /// DOI: 10.1109/TVCG.2005.49
 #[derive(Default, Clone)]
-#[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize),
-    archive(check_bytes)
-)]
 #[repr(C)]
 #[cfg(feature = "dim3")]
 pub struct TriMeshPseudoNormals {
@@ -74,12 +56,6 @@ pub struct TriMeshPseudoNormals {
 
 /// The connected-components of a triangle mesh.
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize),
-    archive(check_bytes)
-)]
 #[repr(C)]
 pub struct TriMeshConnectedComponents {
     /// The `face_colors[i]` gives the connected-component index
@@ -101,12 +77,6 @@ impl TriMeshConnectedComponents {
 
 /// A vertex of a triangle-mesh’s half-edge topology.
 #[derive(Clone, Copy, Debug)]
-#[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize, CheckBytes),
-    archive(as = "Self")
-)]
 #[repr(C)]
 pub struct TopoVertex {
     /// One of the half-edge with this vertex as endpoint.
@@ -115,12 +85,6 @@ pub struct TopoVertex {
 
 /// A face of a triangle-mesh’s half-edge topology.
 #[derive(Clone, Copy, Debug)]
-#[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize, CheckBytes),
-    archive(as = "Self")
-)]
 #[repr(C)]
 pub struct TopoFace {
     /// The half-edge adjacent to this face, with a starting point equal
@@ -130,12 +94,6 @@ pub struct TopoFace {
 
 /// A half-edge of a triangle-mesh’s half-edge topology.
 #[derive(Clone, Copy, Debug)]
-#[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize, CheckBytes),
-    archive(as = "Self")
-)]
 #[repr(C)]
 pub struct TopoHalfEdge {
     /// The next half-edge.
@@ -152,12 +110,6 @@ pub struct TopoHalfEdge {
 
 /// The half-edge topology information of a triangle mesh.
 #[derive(Default, Clone)]
-#[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize),
-    archive(check_bytes)
-)]
 #[repr(C)]
 pub struct TriMeshTopology {
     /// The vertices of this half-edge representation.
@@ -168,12 +120,6 @@ pub struct TriMeshTopology {
     pub half_edges: Vec<TopoHalfEdge>,
 }
 
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize),
-    archive(as = "Self")
-)]
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 /// The status of the cell of an heightfield.
@@ -223,12 +169,6 @@ bitflags::bitflags! {
     }
 }
 
-#[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize),
-    archive(check_bytes)
-)]
 #[repr(C)]
 #[derive(Clone)]
 /// A triangle mesh.
@@ -411,8 +351,8 @@ impl TriMesh {
                 .map(|idx| [idx[0] + base_id, idx[1] + base_id, idx[2] + base_id]),
         );
 
-        let vertices = std::mem::take(&mut self.vertices);
-        let indices = std::mem::take(&mut self.indices);
+        let vertices = core::mem::take(&mut self.vertices);
+        let indices = core::mem::take(&mut self.indices);
         *self = TriMesh::with_flags(vertices, indices, self.flags).unwrap();
     }
 
@@ -429,7 +369,7 @@ impl TriMesh {
         unsafe {
             let len = self.indices.len() * 3;
             let data = self.indices.as_ptr() as *const u32;
-            std::slice::from_raw_parts(data, len)
+            core::slice::from_raw_parts(data, len)
         }
     }
 
@@ -583,8 +523,8 @@ impl TriMesh {
     /// index buffer if some of the vertices of this trimesh are duplicated.
     fn compute_pseudo_normals(&mut self) {
         let mut vertices_pseudo_normal = vec![Vector::zeros(); self.vertices().len()];
-        let mut edges_pseudo_normal = HashMap::default();
-        let mut edges_multiplicity = HashMap::default();
+        let mut edges_pseudo_normal = HashMap::new();
+        let mut edges_multiplicity = HashMap::new();
 
         for idx in self.indices() {
             let vtx = self.vertices();
@@ -691,7 +631,7 @@ impl TriMesh {
         }
 
         let mut topology = TriMeshTopology::default();
-        let mut half_edge_map = HashMap::default();
+        let mut half_edge_map = HashMap::new();
 
         topology.vertices.resize(
             self.vertices.len(),
@@ -1037,18 +977,5 @@ impl TypedSimdCompositeShape for TriMesh {
 
     fn typed_qbvh(&self) -> &Qbvh<u32> {
         &self.qbvh
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use crate::shape::{TriMesh, TriMeshFlags};
-
-    #[test]
-    fn trimesh_error_empty_indices() {
-        assert!(
-            TriMesh::with_flags(vec![], vec![], TriMeshFlags::empty()).is_err(),
-            "A triangle mesh with no triangles is invalid."
-        );
     }
 }

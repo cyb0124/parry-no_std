@@ -1,4 +1,3 @@
-#[cfg(feature = "std")]
 use either::Either;
 use na::Unit;
 
@@ -6,13 +5,6 @@ use crate::math::{Isometry, Point, Real, Vector};
 use crate::shape::SupportMap;
 
 /// A Ball shape.
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "bytemuck", derive(bytemuck::Pod, bytemuck::Zeroable))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize),
-    archive(check_bytes)
-)]
 #[derive(PartialEq, Debug, Copy, Clone)]
 #[repr(C)]
 pub struct Ball {
@@ -33,7 +25,7 @@ impl Ball {
     /// ball. Instead, a convex polygon approximation (with `nsubdivs`
     /// subdivisions) is returned. Returns `None` if that approximation had degenerate
     /// normals (for example if the scaling factor along one axis is zero).
-    #[cfg(all(feature = "dim2", feature = "std"))]
+    #[cfg(all(feature = "dim2"))]
     #[inline]
     pub fn scaled(
         self,
@@ -60,7 +52,7 @@ impl Ball {
     /// ball. Instead, a convex polygon approximation (with `nsubdivs`
     /// subdivisions) is returned. Returns `None` if that approximation had degenerate
     /// normals (for example if the scaling factor along one axis is zero).
-    #[cfg(all(feature = "dim3", feature = "std"))]
+    #[cfg(all(feature = "dim3"))]
     #[inline]
     pub fn scaled(
         self,

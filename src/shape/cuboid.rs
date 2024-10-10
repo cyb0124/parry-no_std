@@ -7,20 +7,7 @@ use crate::shape::{FeatureId, PackedFeatureId, PolygonalFeature, SupportMap};
 use crate::utils::WSign;
 use na::Unit;
 
-#[cfg(not(feature = "std"))]
-use na::RealField; // for .copysign()
-
-#[cfg(feature = "rkyv")]
-use rkyv::{bytecheck, CheckBytes};
-
 /// Shape of a box.
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "bytemuck", derive(bytemuck::Pod, bytemuck::Zeroable))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize, CheckBytes),
-    archive(as = "Self")
-)]
 #[derive(PartialEq, Debug, Copy, Clone)]
 #[repr(C)]
 pub struct Cuboid {

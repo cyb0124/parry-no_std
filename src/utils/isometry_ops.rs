@@ -2,9 +2,6 @@ use crate::math::{Isometry, Point, Real, SimdReal, Vector};
 use na::SimdComplexField;
 use na::Unit; // for .abs()
 
-#[cfg(not(feature = "std"))]
-use na::ComplexField;
-
 /// Extra operations with isometries.
 pub trait IsometryOps<T> {
     /// Transform a vector by the absolute value of the homogeneous matrix

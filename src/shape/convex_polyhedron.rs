@@ -1,35 +1,19 @@
 use crate::math::{Point, Real, Vector, DIM};
 use crate::shape::{FeatureId, PackedFeatureId, PolygonalFeature, PolygonalFeatureMap, SupportMap};
 // use crate::transformation;
-use crate::utils::hashmap::{Entry, HashMap};
 use crate::utils::{self, SortedPair};
+use alloc::vec::Vec;
+use core::f64;
+use hashbrown::hash_map::Entry;
+use hashbrown::HashMap;
 use na::{self, ComplexField, Point2, Unit};
-use std::f64;
 
-#[cfg(not(feature = "std"))]
-use na::ComplexField; // for .abs()
-
-#[cfg(feature = "rkyv")]
-use rkyv::{bytecheck, CheckBytes};
-
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize, CheckBytes),
-    archive(as = "Self")
-)]
 #[derive(PartialEq, Debug, Copy, Clone)]
 pub struct Vertex {
     pub first_adj_face_or_edge: u32,
     pub num_adj_faces_or_edge: u32,
 }
 
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize, CheckBytes),
-    archive(as = "Self")
-)]
 #[derive(PartialEq, Debug, Copy, Clone)]
 pub struct Edge {
     pub vertices: Point2<u32>,
@@ -48,12 +32,6 @@ impl Edge {
     }
 }
 
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize, CheckBytes),
-    archive(as = "Self")
-)]
 #[derive(PartialEq, Debug, Copy, Clone)]
 pub struct Face {
     pub first_vertex_or_edge: u32,
@@ -61,12 +39,6 @@ pub struct Face {
     pub normal: Unit<Vector<Real>>,
 }
 
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize),
-    archive(check_bytes)
-)]
 #[derive(PartialEq, Debug, Copy, Clone)]
 struct Triangle {
     vertices: [u32; 3],
@@ -88,12 +60,6 @@ impl Triangle {
     }
 }
 
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize),
-    archive(check_bytes)
-)]
 #[derive(PartialEq, Debug, Clone)]
 /// A convex polyhedron without degenerate faces.
 pub struct ConvexPolyhedron {
@@ -139,7 +105,7 @@ impl ConvexPolyhedron {
         let mut edges = Vec::<Edge>::new();
         let mut faces = Vec::<Face>::new();
         let mut triangles = Vec::new();
-        let mut edge_map = HashMap::default();
+        let mut edge_map = HashMap::new();
 
         let mut faces_adj_to_vertex = Vec::new();
         let mut edges_adj_to_vertex = Vec::new();

@@ -1,8 +1,7 @@
-use std::iter::IntoIterator;
-
 use crate::bounding_volume::Aabb;
 use crate::math::{Isometry, Point, Real, Vector, DIM};
 use crate::shape::SupportMap;
+use core::iter::IntoIterator;
 use na;
 
 /// Computes the [`Aabb`] of an [support mapped shape](SupportMap).

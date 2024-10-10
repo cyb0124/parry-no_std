@@ -1,8 +1,5 @@
 use crate::math::{Real, SimdBool, SimdReal, SIMD_WIDTH};
 
-#[cfg(all(feature = "std", feature = "parallel"))]
-use crate::partitioning::{qbvh::QbvhNode, SimdNodeIndex};
-
 /// The next action to be taken by a BVH traversal algorithm after having visited a node with some data.
 pub enum SimdBestFirstVisitStatus<Res> {
     /// The traversal can continue.
@@ -108,63 +105,4 @@ pub trait SimdSimultaneousVisitor<T1, T2, SimdBV> {
         right_bv: &SimdBV,
         right_data: Option<[Option<&T2>; SIMD_WIDTH]>,
     ) -> SimdSimultaneousVisitStatus;
-}
-
-/*
- *
- * Parallel visitors below.
- *
- */
-
-/// Trait implemented by visitor called during the parallel traversal of a spatial partitioning data structure.
-#[cfg(all(feature = "std", feature = "parallel"))]
-pub trait ParallelSimdVisitor<LeafData>: Sync {
-    /// Execute an operation on the content of a node of the spatial partitioning structure.
-    ///
-    /// Returns whether the traversal should continue on the node's children, if it should not continue
-    /// on those children, or if the whole traversal should be exited early.
-    fn visit(
-        &self,
-        node_id: SimdNodeIndex,
-        bv: &QbvhNode,
-        data: Option<[Option<&LeafData>; SIMD_WIDTH]>,
-    ) -> SimdVisitStatus;
-}
-
-#[cfg(all(feature = "std", feature = "parallel"))]
-impl<F, LeafData> ParallelSimdVisitor<LeafData> for F
-where
-    F: Sync + Fn(&QbvhNode, Option<[Option<&LeafData>; SIMD_WIDTH]>) -> SimdVisitStatus,
-{
-    fn visit(
-        &self,
-        _node_id: SimdNodeIndex,
-        node: &QbvhNode,
-        data: Option<[Option<&LeafData>; SIMD_WIDTH]>,
-    ) -> SimdVisitStatus {
-        (self)(node, data)
-    }
-}
-
-/// Trait implemented by visitor called during a parallel simultaneous spatial partitioning
-/// data structure traversal.
-#[cfg(all(feature = "std", feature = "parallel"))]
-pub trait ParallelSimdSimultaneousVisitor<LeafData1, LeafData2>: Sync {
-    /// Visitor state data that will be passed down the recursion.
-    type Data: Copy + Sync + Default;
-
-    /// Execute an operation on the content of two nodes, one from each structure.
-    ///
-    /// Returns whether the traversal should continue on the nodes children, if it should not continue
-    /// on those children, or if the whole traversal should be exited early.
-    fn visit(
-        &self,
-        left_node_id: SimdNodeIndex,
-        left_node: &QbvhNode,
-        left_data: Option<[Option<&LeafData1>; SIMD_WIDTH]>,
-        right_node_id: SimdNodeIndex,
-        right_node: &QbvhNode,
-        right_data: Option<[Option<&LeafData2>; SIMD_WIDTH]>,
-        visitor_data: Self::Data,
-    ) -> (SimdSimultaneousVisitStatus, Self::Data);
 }

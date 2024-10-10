@@ -1,20 +1,16 @@
-use na;
-#[cfg(not(feature = "std"))]
-use na::ComplexField; // for .abs()
-
 use crate::math::Real;
 #[cfg(feature = "dim2")]
 use crate::query;
 use crate::query::gjk::{self, CSOPoint, VoronoiSimplex};
 use crate::query::{Ray, RayCast, RayIntersection};
-#[cfg(all(feature = "std", feature = "dim2"))]
+#[cfg(feature = "dim2")]
 use crate::shape::ConvexPolygon;
-#[cfg(all(feature = "std", feature = "dim3"))]
+#[cfg(feature = "dim3")]
 use crate::shape::ConvexPolyhedron;
 use crate::shape::{Capsule, FeatureId, Segment, SupportMap};
 #[cfg(feature = "dim3")]
 use crate::shape::{Cone, Cylinder};
-
+use na;
 use num::Zero;
 
 /// Cast a ray on a shape using the GJK algorithm.
@@ -126,7 +122,6 @@ impl RayCast for Capsule {
 }
 
 #[cfg(feature = "dim3")]
-#[cfg(feature = "std")]
 impl RayCast for ConvexPolyhedron {
     fn cast_local_ray_and_get_normal(
         &self,
@@ -145,7 +140,6 @@ impl RayCast for ConvexPolyhedron {
 }
 
 #[cfg(feature = "dim2")]
-#[cfg(feature = "std")]
 impl RayCast for ConvexPolygon {
     fn cast_local_ray_and_get_normal(
         &self,

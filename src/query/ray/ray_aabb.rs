@@ -1,11 +1,9 @@
-use std::mem;
-
-use na;
-
 use crate::bounding_volume::Aabb;
 use crate::math::{Real, Vector, DIM};
 use crate::query::{Ray, RayCast, RayIntersection};
 use crate::shape::FeatureId;
+use core::mem;
+use na;
 use num::Zero;
 
 impl RayCast for Aabb {

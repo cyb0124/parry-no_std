@@ -1,21 +1,10 @@
-#[cfg(feature = "std")]
-use na::DMatrix;
-use std::ops::Range;
-
 use crate::bounding_volume::Aabb;
 use crate::math::{Real, Vector};
 use crate::shape::{FeatureId, Triangle, TrianglePseudoNormals};
+use core::ops::Range;
+use na::DMatrix;
 use na::{Point3, Unit};
 
-#[cfg(not(feature = "std"))]
-use na::ComplexField;
-
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize),
-    archive(as = "Self")
-)]
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 /// The status of the cell of an heightfield.
 pub struct HeightFieldCellStatus(u8);
@@ -33,12 +22,6 @@ bitflags::bitflags! {
     }
 }
 
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize),
-    archive(as = "Self")
-)]
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 /// Flags controlling the behavior of some operations involving heightfields.
@@ -56,13 +39,6 @@ bitflags::bitflags! {
     }
 }
 
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-// TODO: Archive isn’t implemented for VecStorage yet.
-// #[cfg_attr(
-//     feature = "rkyv",
-//     derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize),
-//     archive(check_bytes)
-// )]
 #[derive(Debug, Clone)]
 #[repr(C)]
 /// A 3D heightfield.
@@ -76,7 +52,6 @@ pub struct HeightField {
     flags: HeightFieldFlags,
 }
 
-#[cfg(feature = "std")]
 impl HeightField {
     /// Initializes a new heightfield with the given heights, scaling factor, and flags.
     pub fn new(heights: DMatrix<Real>, scale: Vector<Real>) -> Self {

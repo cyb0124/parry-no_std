@@ -4,9 +4,11 @@ use crate::query::visitors::BoundingVolumeIntersectionsVisitor;
 use crate::query::{IntersectResult, PointQuery, SplitResult};
 use crate::shape::{Cuboid, FeatureId, Polyline, Segment, Shape, TriMesh, TriMeshFlags, Triangle};
 use crate::transformation::{intersect_meshes, MeshIntersectionError};
-use crate::utils::{hashmap::HashMap, SortedPair, WBasis};
+use crate::utils::{SortedPair, WBasis};
+use alloc::{vec, vec::Vec};
+use core::cmp::Ordering;
+use hashbrown::HashMap;
 use spade::{handles::FixedVertexHandle, ConstrainedDelaunayTriangulation, Triangulation as _};
-use std::cmp::Ordering;
 
 struct Triangulation {
     delaunay: ConstrainedDelaunayTriangulation<spade::Point2<Real>>,
@@ -130,7 +132,7 @@ impl TriMesh {
         }
 
         // 2. Split the triangles.
-        let mut intersections_found = HashMap::default();
+        let mut intersections_found = HashMap::new();
         let mut new_indices = indices.to_vec();
         let mut new_vertices = vertices.to_vec();
 
@@ -231,7 +233,7 @@ impl TriMesh {
                     // The plane splits the triangle into 1 + 2 triangles.
                     // First, make sure the edge indices are consecutive.
                     if e2 != (e1 + 1) % 3 {
-                        std::mem::swap(&mut e1, &mut e2);
+                        core::mem::swap(&mut e1, &mut e2);
                     }
 
                     let ia = e2; // The first point of the second edge is the vertex shared by both edges.
@@ -439,8 +441,8 @@ impl TriMesh {
             }
         };
 
-        let mut intersections_found = HashMap::default();
-        let mut existing_vertices_found = HashMap::default();
+        let mut intersections_found = HashMap::new();
+        let mut existing_vertices_found = HashMap::new();
         let mut new_vertices = Vec::new();
 
         for idx in indices.iter() {
@@ -549,7 +551,7 @@ impl TriMesh {
                     // The plane splits the triangle into 1 + 2 triangles.
                     // First, make sure the edge indices are consecutive.
                     if e2 != (e1 + 1) % 3 {
-                        std::mem::swap(&mut e1, &mut e2);
+                        core::mem::swap(&mut e1, &mut e2);
                     }
 
                     let ia = e2; // The first point of the second edge is the vertex shared by both edges.

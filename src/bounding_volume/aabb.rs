@@ -8,21 +8,9 @@ use arrayvec::ArrayVec;
 use na;
 use num::Bounded;
 
-#[cfg(not(feature = "std"))]
-use na::ComplexField; // for .abs()
-
 use crate::query::{Ray, RayCast};
-#[cfg(feature = "rkyv")]
-use rkyv::{bytecheck, CheckBytes};
 
 /// An Axis Aligned Bounding Box.
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "bytemuck", derive(bytemuck::Pod, bytemuck::Zeroable))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize, CheckBytes),
-    archive(as = "Self")
-)]
 #[derive(Debug, PartialEq, Copy, Clone)]
 #[repr(C)]
 pub struct Aabb {
@@ -411,7 +399,6 @@ impl Aabb {
     }
 
     #[cfg(feature = "dim3")]
-    #[cfg(feature = "std")]
     pub fn intersects_spiral(
         &self,
         point: &Point<Real>,
@@ -495,8 +482,8 @@ impl Aabb {
         };
 
         // Check the 8 planar faces of the Aabb.
-        let mut roots = vec![];
-        let mut candidates = vec![];
+        let mut roots = alloc::vec![];
+        let mut candidates = alloc::vec![];
 
         let planes = [
             (-self.mins[0], -Vector::x(), 0),

@@ -2,12 +2,6 @@ use crate::math::{Isometry, Point, Real, Vector};
 use crate::shape::PackedFeatureId;
 
 #[derive(Copy, Clone, Debug)]
-#[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize),
-    archive(check_bytes)
-)]
 /// A single contact between two shape.
 pub struct TrackedContact<Data> {
     /// The contact point in the local-space of the first shape.
@@ -71,7 +65,6 @@ impl<Data: Default + Copy> TrackedContact<Data> {
 }
 
 #[derive(Clone, Debug, Default)]
-#[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
 /// A contact manifold between two shapes.
 ///
 /// A contact manifold describes a set of contacts between two shapes. All the contact
@@ -84,7 +77,7 @@ pub struct ContactManifold<ManifoldData, ContactData> {
     pub points: arrayvec::ArrayVec<TrackedContact<ContactData>, 2>,
     /// The contacts points.
     #[cfg(feature = "dim3")]
-    pub points: Vec<TrackedContact<ContactData>>,
+    pub points: alloc::vec::Vec<TrackedContact<ContactData>>,
     /// The contact normal of all the contacts of this manifold, expressed in the local space of the first shape.
     pub local_n1: Vector<Real>,
     /// The contact normal of all the contacts of this manifold, expressed in the local space of the second shape.
@@ -122,7 +115,7 @@ impl<ManifoldData, ContactData: Default + Copy> ContactManifold<ManifoldData, Co
             #[cfg(feature = "dim2")]
             points: arrayvec::ArrayVec::new(),
             #[cfg(feature = "dim3")]
-            points: Vec::new(),
+            points: alloc::vec::Vec::new(),
             local_n1: Vector::zeros(),
             local_n2: Vector::zeros(),
             subshape1,
@@ -141,7 +134,7 @@ impl<ManifoldData, ContactData: Default + Copy> ContactManifold<ManifoldData, Co
         #[cfg(feature = "dim2")]
         let points = self.points.clone();
         #[cfg(feature = "dim3")]
-        let points = std::mem::take(&mut self.points);
+        let points = core::mem::take(&mut self.points);
         self.points.clear();
 
         ContactManifold {

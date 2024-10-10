@@ -1,12 +1,12 @@
+use super::utils::split_indices_wrt_dim;
+use super::{IndexedData, NodeIndex, Qbvh, QbvhNode, QbvhNodeFlags, QbvhProxy};
 use crate::bounding_volume::{Aabb, SimdAabb};
 use crate::math::Vector;
 use crate::math::{Point, Real};
 use crate::query::SplitResult;
 use crate::simd::SimdReal;
+use alloc::{vec, vec::Vec};
 use simba::simd::SimdValue;
-
-use super::utils::split_indices_wrt_dim;
-use super::{IndexedData, NodeIndex, Qbvh, QbvhNode, QbvhNodeFlags, QbvhProxy};
 
 pub struct BuilderProxies<'a, LeafData> {
     proxies: &'a mut Vec<QbvhProxy<LeafData>>,

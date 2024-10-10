@@ -1,5 +1,6 @@
 use super::TriangleFacet;
 use crate::math::Real;
+use hashbrown::{hash_map::Entry, HashMap};
 use na::Point3;
 
 pub fn check_facet_links(ifacet: usize, facets: &[TriangleFacet]) {
@@ -27,9 +28,8 @@ pub fn check_facet_links(ifacet: usize, facets: &[TriangleFacet]) {
 
 /// Checks if a convex-hull is properly formed.
 pub fn check_convex_hull(points: &[Point3<Real>], triangles: &[[u32; 3]]) {
-    use crate::utils::hashmap::{Entry, HashMap};
     use crate::utils::SortedPair;
-    let mut edges = HashMap::default();
+    let mut edges = HashMap::new();
 
     struct EdgeData {
         adjacent_triangles: [usize; 2],
@@ -46,8 +46,7 @@ pub fn check_convex_hull(points: &[Point3<Real>], triangles: &[[u32; 3]]) {
     for i in 0..points.len() {
         for j in i + 1..points.len() {
             if points[i] == points[j] {
-                println!("Duplicate: {}", points[i]);
-                panic!("Found duplicate points.")
+                panic!("Found duplicate points: {}", points[i])
             }
         }
     }

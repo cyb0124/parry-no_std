@@ -1,15 +1,8 @@
 use crate::math::{Isometry, Point, Real};
-
-use std::mem;
+use core::mem;
 
 /// Closest points information.
 #[derive(Debug, PartialEq, Clone, Copy)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize),
-    archive(check_bytes)
-)]
 pub enum ClosestPoints {
     /// The two objects are intersecting.
     Intersecting,

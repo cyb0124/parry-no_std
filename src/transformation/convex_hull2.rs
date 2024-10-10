@@ -1,7 +1,7 @@
-use std::marker::PhantomData;
-
 use crate::math::Real;
 use crate::transformation::convex_hull_utils::{indexed_support_point_id, support_point_id};
+use alloc::vec::Vec;
+use core::marker::PhantomData;
 use na::{self, Point2, Vector2};
 use num_traits::Zero;
 

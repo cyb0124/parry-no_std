@@ -1,10 +1,7 @@
 use crate::bounding_volume::{Aabb, SimdAabb};
 use crate::math::{Real, Vector};
-
+use alloc::vec::Vec;
 use na::SimdValue;
-
-#[cfg(feature = "rkyv")]
-use rkyv::{bytecheck, CheckBytes};
 
 /// A data to which an index is associated.
 pub trait IndexedData: Copy {
@@ -48,12 +45,6 @@ pub type SimdNodeIndex = u32;
 
 /// The index of a node part of a Qbvh.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-#[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize, CheckBytes),
-    archive(as = "Self")
-)]
 /// The index of one specific node of a Qbvh.
 pub struct NodeIndex {
     /// The index of the SIMD node containing the addressed node.
@@ -79,12 +70,6 @@ impl NodeIndex {
     }
 }
 
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize),
-    archive(as = "Self")
-)]
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 /// The status of a QBVH node.
 pub struct QbvhNodeFlags(u8);
@@ -104,12 +89,6 @@ bitflags::bitflags! {
 ///
 /// This groups four nodes of the Qbvh.
 #[derive(Copy, Clone, Debug)]
-#[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize),
-    archive(check_bytes)
-)]
 pub struct QbvhNode {
     /// The Aabbs of the qbvh nodes represented by this node.
     pub simd_aabb: SimdAabb,
@@ -177,12 +156,6 @@ impl QbvhNode {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-#[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize),
-    archive(check_bytes)
-)]
 /// Combination of a leaf data and its associated node’s index.
 pub struct QbvhProxy<LeafData> {
     /// Index of the leaf node the leaf data is associated to.
@@ -217,12 +190,6 @@ impl<LeafData> QbvhProxy<LeafData> {
 /// A quaternary bounding-volume-hierarchy.
 ///
 /// This is a bounding-volume-hierarchy where each node has either four children or none.
-#[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize),
-    archive(check_bytes)
-)]
 #[repr(C)]
 #[derive(Debug, Clone)]
 pub struct Qbvh<LeafData> {

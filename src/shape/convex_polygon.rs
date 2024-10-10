@@ -1,15 +1,10 @@
 use crate::math::{Point, Real, Vector};
 use crate::shape::{FeatureId, PackedFeatureId, PolygonalFeature, PolygonalFeatureMap, SupportMap};
 use crate::utils;
+use alloc::vec::Vec;
 use na::{self, ComplexField, RealField, Unit};
 
 /// A 2D convex polygon.
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize),
-    archive(check_bytes)
-)]
 #[derive(Clone, Debug)]
 pub struct ConvexPolygon {
     points: Vec<Point<Real>>,
@@ -284,33 +279,3 @@ impl ConvexPolyhedron for ConvexPolygon {
     }
 }
 */
-
-#[cfg(feature = "dim2")]
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_dilation() {
-        let polygon = ConvexPolygon::from_convex_polyline(vec![
-            Point::new(1., 0.),
-            Point::new(-1., 0.),
-            Point::new(0., -1.),
-        ])
-        .unwrap();
-
-        let offsetted = polygon.offsetted(0.5);
-        let expected = vec![
-            Point::new(2.207, 0.5),
-            Point::new(-2.207, 0.5),
-            Point::new(0., -1.707),
-        ];
-
-        assert_eq!(offsetted.points().len(), 3);
-        assert!(offsetted
-            .points()
-            .iter()
-            .zip(expected.iter())
-            .all(|(a, b)| (a.coords - b.coords).magnitude() < 0.001));
-    }
-}

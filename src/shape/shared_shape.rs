@@ -1,8 +1,6 @@
 use crate::math::{Isometry, Point, Real, Vector, DIM};
 #[cfg(feature = "dim2")]
 use crate::shape::ConvexPolygon;
-#[cfg(feature = "serde-serialize")]
-use crate::shape::DeserializableTypedShape;
 #[cfg(feature = "dim3")]
 use crate::shape::HeightFieldFlags;
 use crate::shape::{
@@ -12,10 +10,9 @@ use crate::shape::{
 #[cfg(feature = "dim3")]
 use crate::shape::{Cone, ConvexPolyhedron, Cylinder};
 use crate::transformation::vhacd::{VHACDParameters, VHACD};
+use alloc::{fmt, sync::Arc, vec, vec::Vec};
+use core::ops::Deref;
 use na::Unit;
-use std::fmt;
-use std::ops::Deref;
-use std::sync::Arc;
 
 use super::TriMeshBuilderError;
 
@@ -387,28 +384,5 @@ impl SharedShape {
         flags: HeightFieldFlags,
     ) -> Self {
         SharedShape(Arc::new(HeightField::with_flags(heights, scale, flags)))
-    }
-}
-
-#[cfg(feature = "serde-serialize")]
-impl serde::Serialize for SharedShape {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        self.0.as_typed_shape().serialize(serializer)
-    }
-}
-
-#[cfg(feature = "serde-serialize")]
-impl<'de> serde::Deserialize<'de> for SharedShape {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        use crate::serde::de::Error;
-        DeserializableTypedShape::deserialize(deserializer)?
-            .into_shared_shape()
-            .ok_or(D::Error::custom("Cannot deserialize custom shape."))
     }
 }

@@ -1,5 +1,6 @@
 #![allow(clippy::multiple_bound_locations)] // for impl_downcast
 
+use alloc::boxed::Box;
 use downcast_rs::{impl_downcast, DowncastSync};
 
 use crate::query::contact_manifolds::{
@@ -10,7 +11,6 @@ use crate::query::contact_manifolds::{
 };
 
 #[derive(Copy, Clone)]
-#[cfg_attr(feature = "serde-serialize", derive(Serialize))]
 /// Enum representing workspace data of a specific type.
 pub enum TypedWorkspaceData<'a> {
     /// A trimesh workspace.
@@ -29,47 +29,6 @@ pub enum TypedWorkspaceData<'a> {
     CompositeShapeShapeContactManifoldsWorkspace(&'a CompositeShapeShapeContactManifoldsWorkspace),
     /// A custom workspace.
     Custom,
-}
-
-// NOTE: must match the TypedWorkspaceData enum.
-#[cfg(feature = "serde-serialize")]
-#[derive(Deserialize)]
-enum DeserializableWorkspaceData {
-    TriMeshShapeContactManifoldsWorkspace(TriMeshShapeContactManifoldsWorkspace),
-    HeightfieldShapeContactManifoldsWorkspace(HeightFieldShapeContactManifoldsWorkspace),
-    HeightfieldCompositeShapeContactManifoldsWorkspace(
-        HeightFieldCompositeShapeContactManifoldsWorkspace,
-    ),
-    CompositeShapeCompositeShapeContactManifoldsWorkspace(
-        CompositeShapeCompositeShapeContactManifoldsWorkspace,
-    ),
-    CompositeShapeShapeContactManifoldsWorkspace(CompositeShapeShapeContactManifoldsWorkspace),
-    #[allow(dead_code)]
-    Custom,
-}
-
-#[cfg(feature = "serde-serialize")]
-impl DeserializableWorkspaceData {
-    pub fn into_contact_manifold_workspace(self) -> Option<ContactManifoldsWorkspace> {
-        match self {
-            DeserializableWorkspaceData::TriMeshShapeContactManifoldsWorkspace(w) => {
-                Some(ContactManifoldsWorkspace(Box::new(w)))
-            }
-            DeserializableWorkspaceData::HeightfieldShapeContactManifoldsWorkspace(w) => {
-                Some(ContactManifoldsWorkspace(Box::new(w)))
-            }
-            DeserializableWorkspaceData::HeightfieldCompositeShapeContactManifoldsWorkspace(w) => {
-                Some(ContactManifoldsWorkspace(Box::new(w)))
-            }
-            DeserializableWorkspaceData::CompositeShapeCompositeShapeContactManifoldsWorkspace(
-                w,
-            ) => Some(ContactManifoldsWorkspace(Box::new(w))),
-            DeserializableWorkspaceData::CompositeShapeShapeContactManifoldsWorkspace(w) => {
-                Some(ContactManifoldsWorkspace(Box::new(w)))
-            }
-            DeserializableWorkspaceData::Custom => None,
-        }
-    }
 }
 
 /// Data from a [`ContactManifoldsWorkspace`].
@@ -96,28 +55,5 @@ impl Clone for ContactManifoldsWorkspace {
 impl<T: WorkspaceData> From<T> for ContactManifoldsWorkspace {
     fn from(data: T) -> Self {
         Self(Box::new(data) as Box<dyn WorkspaceData>)
-    }
-}
-
-#[cfg(feature = "serde-serialize")]
-impl serde::Serialize for ContactManifoldsWorkspace {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        self.0.as_typed_workspace_data().serialize(serializer)
-    }
-}
-
-#[cfg(feature = "serde-serialize")]
-impl<'de> serde::Deserialize<'de> for ContactManifoldsWorkspace {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        use crate::serde::de::Error;
-        DeserializableWorkspaceData::deserialize(deserializer)?
-            .into_contact_manifold_workspace()
-            .ok_or(D::Error::custom("Cannot deserialize custom shape."))
     }
 }

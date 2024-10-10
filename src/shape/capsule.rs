@@ -1,21 +1,9 @@
 use crate::math::{Isometry, Point, Real, Rotation, Vector};
 use crate::shape::{Segment, SupportMap};
+use either::Either;
 use na::Unit;
 
-#[cfg(feature = "std")]
-use either::Either;
-
-#[cfg(feature = "rkyv")]
-use rkyv::{bytecheck, CheckBytes};
-
 #[derive(Copy, Clone, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "bytemuck", derive(bytemuck::Pod, bytemuck::Zeroable))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize, CheckBytes),
-    archive(as = "Self")
-)]
 #[repr(C)]
 /// A capsule shape defined as a round segment.
 pub struct Capsule {
@@ -109,7 +97,7 @@ impl Capsule {
     /// capsule. Instead, a convex polygon approximation (with `nsubdivs`
     /// subdivisions) is returned. Returns `None` if that approximation had degenerate
     /// normals (for example if the scaling factor along one axis is zero).
-    #[cfg(all(feature = "dim2", feature = "std"))]
+    #[cfg(all(feature = "dim2"))]
     pub fn scaled(
         self,
         scale: &Vector<Real>,
@@ -139,7 +127,7 @@ impl Capsule {
     /// capsule. Instead, a convex polygon approximation (with `nsubdivs`
     /// subdivisions) is returned. Returns `None` if that approximation had degenerate
     /// normals (for example if the scaling factor along one axis is zero).
-    #[cfg(all(feature = "dim3", feature = "std"))]
+    #[cfg(all(feature = "dim3"))]
     pub fn scaled(
         self,
         scale: &Vector<Real>,

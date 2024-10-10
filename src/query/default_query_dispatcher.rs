@@ -4,13 +4,13 @@ use crate::query::{
     self, details::NonlinearShapeCastMode, ClosestPoints, Contact, NonlinearRigidMotion,
     QueryDispatcher, ShapeCastHit, Unsupported,
 };
-#[cfg(feature = "std")]
 use crate::query::{
     contact_manifolds::{ContactManifoldsWorkspace, NormalConstraints},
     query_dispatcher::PersistentQueryDispatcher,
     ContactManifold,
 };
 use crate::shape::{HalfSpace, Segment, Shape, ShapeType};
+use alloc::vec::Vec;
 
 /// A dispatcher that exposes built-in queries
 #[derive(Debug, Clone)]
@@ -62,18 +62,15 @@ impl QueryDispatcher for DefaultQueryDispatcher {
             Ok(query::details::intersection_test_support_map_support_map(
                 pos12, s1, s2,
             ))
+        } else if let Some(c1) = shape1.as_composite_shape() {
+            Ok(query::details::intersection_test_composite_shape_shape(
+                self, pos12, c1, shape2,
+            ))
+        } else if let Some(c2) = shape2.as_composite_shape() {
+            Ok(query::details::intersection_test_shape_composite_shape(
+                self, pos12, shape1, c2,
+            ))
         } else {
-            #[cfg(feature = "std")]
-            if let Some(c1) = shape1.as_composite_shape() {
-                return Ok(query::details::intersection_test_composite_shape_shape(
-                    self, pos12, c1, shape2,
-                ));
-            } else if let Some(c2) = shape2.as_composite_shape() {
-                return Ok(query::details::intersection_test_shape_composite_shape(
-                    self, pos12, shape1, c2,
-                ));
-            }
-
             Err(Unsupported)
         }
     }
@@ -121,18 +118,15 @@ impl QueryDispatcher for DefaultQueryDispatcher {
             Ok(query::details::distance_support_map_support_map(
                 pos12, s1, s2,
             ))
+        } else if let Some(c1) = shape1.as_composite_shape() {
+            Ok(query::details::distance_composite_shape_shape(
+                self, pos12, c1, shape2,
+            ))
+        } else if let Some(c2) = shape2.as_composite_shape() {
+            Ok(query::details::distance_shape_composite_shape(
+                self, pos12, shape1, c2,
+            ))
         } else {
-            #[cfg(feature = "std")]
-            if let Some(c1) = shape1.as_composite_shape() {
-                return Ok(query::details::distance_composite_shape_shape(
-                    self, pos12, c1, shape2,
-                ));
-            } else if let Some(c2) = shape2.as_composite_shape() {
-                return Ok(query::details::distance_shape_composite_shape(
-                    self, pos12, shape1, c2,
-                ));
-            }
-
             Err(Unsupported)
         }
     }
@@ -173,22 +167,19 @@ impl QueryDispatcher for DefaultQueryDispatcher {
             Ok(query::details::contact_convex_polyhedron_ball(
                 pos12, shape1, b2, prediction,
             ))
+        } else if let (Some(s1), Some(s2)) = (shape1.as_support_map(), shape2.as_support_map()) {
+            Ok(query::details::contact_support_map_support_map(
+                pos12, s1, s2, prediction,
+            ))
+        } else if let Some(c1) = shape1.as_composite_shape() {
+            Ok(query::details::contact_composite_shape_shape(
+                self, pos12, c1, shape2, prediction,
+            ))
+        } else if let Some(c2) = shape2.as_composite_shape() {
+            Ok(query::details::contact_shape_composite_shape(
+                self, pos12, shape1, c2, prediction,
+            ))
         } else {
-            #[cfg(feature = "std")]
-            if let (Some(s1), Some(s2)) = (shape1.as_support_map(), shape2.as_support_map()) {
-                return Ok(query::details::contact_support_map_support_map(
-                    pos12, s1, s2, prediction,
-                ));
-            } else if let Some(c1) = shape1.as_composite_shape() {
-                return Ok(query::details::contact_composite_shape_shape(
-                    self, pos12, c1, shape2, prediction,
-                ));
-            } else if let Some(c2) = shape2.as_composite_shape() {
-                return Ok(query::details::contact_shape_composite_shape(
-                    self, pos12, shape1, c2, prediction,
-                ));
-            }
-
             Err(Unsupported)
         }
     }
@@ -253,18 +244,15 @@ impl QueryDispatcher for DefaultQueryDispatcher {
             Ok(query::details::closest_points_support_map_support_map(
                 pos12, s1, s2, max_dist,
             ))
+        } else if let Some(c1) = shape1.as_composite_shape() {
+            Ok(query::details::closest_points_composite_shape_shape(
+                self, pos12, c1, shape2, max_dist,
+            ))
+        } else if let Some(c2) = shape2.as_composite_shape() {
+            Ok(query::details::closest_points_shape_composite_shape(
+                self, pos12, shape1, c2, max_dist,
+            ))
         } else {
-            #[cfg(feature = "std")]
-            if let Some(c1) = shape1.as_composite_shape() {
-                return Ok(query::details::closest_points_composite_shape_shape(
-                    self, pos12, c1, shape2, max_dist,
-                ));
-            } else if let Some(c2) = shape2.as_composite_shape() {
-                return Ok(query::details::closest_points_shape_composite_shape(
-                    self, pos12, shape1, c2, max_dist,
-                ));
-            }
-
             Err(Unsupported)
         }
     }
@@ -305,55 +293,51 @@ impl QueryDispatcher for DefaultQueryDispatcher {
                 p2,
                 options,
             ))
+        } else if let Some(heightfield1) = shape1.as_heightfield() {
+            query::details::cast_shapes_heightfield_shape(
+                self,
+                pos12,
+                local_vel12,
+                heightfield1,
+                shape2,
+                options,
+            )
+        } else if let Some(heightfield2) = shape1.as_heightfield() {
+            query::details::cast_shapes_shape_heightfield(
+                self,
+                pos12,
+                local_vel12,
+                shape1,
+                heightfield2,
+                options,
+            )
+        } else if let (Some(s1), Some(s2)) = (shape1.as_support_map(), shape2.as_support_map()) {
+            Ok(query::details::cast_shapes_support_map_support_map(
+                pos12,
+                local_vel12,
+                s1,
+                s2,
+                options,
+            ))
+        } else if let Some(c1) = shape1.as_composite_shape() {
+            Ok(query::details::cast_shapes_composite_shape_shape(
+                self,
+                pos12,
+                local_vel12,
+                c1,
+                shape2,
+                options,
+            ))
+        } else if let Some(c2) = shape2.as_composite_shape() {
+            Ok(query::details::cast_shapes_shape_composite_shape(
+                self,
+                pos12,
+                local_vel12,
+                shape1,
+                c2,
+                options,
+            ))
         } else {
-            #[cfg(feature = "std")]
-            if let Some(heightfield1) = shape1.as_heightfield() {
-                return query::details::cast_shapes_heightfield_shape(
-                    self,
-                    pos12,
-                    local_vel12,
-                    heightfield1,
-                    shape2,
-                    options,
-                );
-            } else if let Some(heightfield2) = shape1.as_heightfield() {
-                return query::details::cast_shapes_shape_heightfield(
-                    self,
-                    pos12,
-                    local_vel12,
-                    shape1,
-                    heightfield2,
-                    options,
-                );
-            } else if let (Some(s1), Some(s2)) = (shape1.as_support_map(), shape2.as_support_map())
-            {
-                return Ok(query::details::cast_shapes_support_map_support_map(
-                    pos12,
-                    local_vel12,
-                    s1,
-                    s2,
-                    options,
-                ));
-            } else if let Some(c1) = shape1.as_composite_shape() {
-                return Ok(query::details::cast_shapes_composite_shape_shape(
-                    self,
-                    pos12,
-                    local_vel12,
-                    c1,
-                    shape2,
-                    options,
-                ));
-            } else if let Some(c2) = shape2.as_composite_shape() {
-                return Ok(query::details::cast_shapes_shape_composite_shape(
-                    self,
-                    pos12,
-                    local_vel12,
-                    shape1,
-                    c2,
-                    options,
-                ));
-            }
-
             Err(Unsupported)
         }
     }
@@ -380,31 +364,29 @@ impl QueryDispatcher for DefaultQueryDispatcher {
                     self, motion1, sm1, shape1, motion2, sm2, shape2, start_time, end_time, mode,
                 ),
             )
+        } else if let Some(c1) = shape1.as_composite_shape() {
+            Ok(query::details::cast_shapes_nonlinear_composite_shape_shape(
+                self,
+                motion1,
+                c1,
+                motion2,
+                shape2,
+                start_time,
+                end_time,
+                stop_at_penetration,
+            ))
+        } else if let Some(c2) = shape2.as_composite_shape() {
+            Ok(query::details::cast_shapes_nonlinear_shape_composite_shape(
+                self,
+                motion1,
+                shape1,
+                motion2,
+                c2,
+                start_time,
+                end_time,
+                stop_at_penetration,
+            ))
         } else {
-            #[cfg(feature = "std")]
-            if let Some(c1) = shape1.as_composite_shape() {
-                return Ok(query::details::cast_shapes_nonlinear_composite_shape_shape(
-                    self,
-                    motion1,
-                    c1,
-                    motion2,
-                    shape2,
-                    start_time,
-                    end_time,
-                    stop_at_penetration,
-                ));
-            } else if let Some(c2) = shape2.as_composite_shape() {
-                return Ok(query::details::cast_shapes_nonlinear_shape_composite_shape(
-                    self,
-                    motion1,
-                    shape1,
-                    motion2,
-                    c2,
-                    start_time,
-                    end_time,
-                    stop_at_penetration,
-                ));
-            }
             /* } else if let (Some(p1), Some(s2)) = (shape1.as_shape::<HalfSpace>(), shape2.as_support_map()) {
             //        query::details::cast_shapes_nonlinear_halfspace_support_map(m1, vel1, p1, m2, vel2, s2)
                     unimplemented!()
@@ -417,7 +399,6 @@ impl QueryDispatcher for DefaultQueryDispatcher {
     }
 }
 
-#[cfg(feature = "std")]
 impl<ManifoldData, ContactData> PersistentQueryDispatcher<ManifoldData, ContactData>
     for DefaultQueryDispatcher
 where

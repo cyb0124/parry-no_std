@@ -3,23 +3,10 @@
 use crate::math::{Matrix, Point, Real};
 use crate::shape::{Segment, Triangle};
 use crate::utils;
+use core::mem;
 use na::Matrix3;
-use std::mem;
-
-#[cfg(not(feature = "std"))]
-use na::ComplexField; // for .abs()
-
-#[cfg(feature = "rkyv")]
-use rkyv::{bytecheck, CheckBytes};
 
 /// A tetrahedron with 4 vertices.
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "bytemuck", derive(bytemuck::Pod, bytemuck::Zeroable))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize, CheckBytes),
-    archive(as = "Self")
-)]
 #[derive(Copy, Clone, Debug)]
 #[repr(C)]
 pub struct Tetrahedron {

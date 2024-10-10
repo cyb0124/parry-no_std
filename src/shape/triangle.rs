@@ -5,27 +5,15 @@ use crate::shape::SupportMap;
 use crate::shape::{PolygonalFeature, Segment};
 use crate::utils;
 
-use na::{self, ComplexField, Unit};
-use num::Zero;
-use std::mem;
-
-#[cfg(feature = "dim3")]
-use {crate::shape::FeatureId, std::f64};
-
 #[cfg(feature = "dim2")]
 use crate::shape::PackedFeatureId;
-
-#[cfg(feature = "rkyv")]
-use rkyv::{bytecheck, CheckBytes};
+use core::mem;
+use na::{self, ComplexField, Unit};
+use num::Zero;
+#[cfg(feature = "dim3")]
+use {crate::shape::FeatureId, core::f64};
 
 /// A triangle shape.
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "bytemuck", derive(bytemuck::Pod, bytemuck::Zeroable))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize, CheckBytes),
-    archive(as = "Self")
-)]
 #[derive(PartialEq, Debug, Copy, Clone, Default)]
 #[repr(C)]
 pub struct Triangle {

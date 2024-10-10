@@ -1,5 +1,6 @@
 #![allow(clippy::needless_range_loop)] // This tends to make the traversal code much more verbose that necessary.
 
+use super::{IndexedData, NodeIndex};
 use crate::bounding_volume::{Aabb, SimdAabb};
 use crate::math::Real;
 use crate::partitioning::visitor::{SimdSimultaneousVisitStatus, SimdVisitorWithContext};
@@ -9,18 +10,10 @@ use crate::partitioning::{
 };
 use crate::simd::SIMD_WIDTH;
 use crate::utils::WeightedValue;
+use alloc::collections::BinaryHeap;
+use alloc::{vec, vec::Vec};
 use num::Bounded;
 use simba::simd::SimdBool;
-use std::collections::BinaryHeap;
-#[cfg(feature = "parallel")]
-use {
-    crate::partitioning::{ParallelSimdSimultaneousVisitor, ParallelSimdVisitor},
-    arrayvec::ArrayVec,
-    rayon::prelude::*,
-    std::sync::atomic::{AtomicBool, Ordering as AtomicOrdering},
-};
-
-use super::{IndexedData, NodeIndex};
 
 impl<LeafData: IndexedData> Qbvh<LeafData> {
     /// Performs a depth-first traversal on the BVH.
@@ -497,188 +490,5 @@ impl<LeafData: IndexedData> Qbvh<LeafData> {
                 }
             }
         }
-    }
-}
-
-#[cfg(feature = "parallel")]
-impl<LeafData: IndexedData + Sync> Qbvh<LeafData> {
-    /// Performs a depth-first traversal of two Qbvh using
-    /// parallelism internally for better performances with large tree.
-    pub fn traverse_depth_first_parallel(&self, visitor: &impl ParallelSimdVisitor<LeafData>) {
-        if !self.nodes.is_empty() {
-            let exit_early = AtomicBool::new(false);
-            self.traverse_depth_first_node_parallel(visitor, &exit_early, 0);
-        }
-    }
-
-    /// Runs a parallel depth-first traversal of the sub-tree starting at the given node.
-    pub fn traverse_depth_first_node_parallel(
-        &self,
-        visitor: &impl ParallelSimdVisitor<LeafData>,
-        exit_early: &AtomicBool,
-        entry: u32,
-    ) {
-        if exit_early.load(AtomicOrdering::Relaxed) {
-            return;
-        }
-
-        let mut stack: ArrayVec<u32, SIMD_WIDTH> = ArrayVec::new();
-        let node = &self.nodes[entry as usize];
-        let leaf_data = if node.is_leaf() {
-            Some(array![|ii| Some(&self.proxies.get(node.children[ii] as usize)?.data); SIMD_WIDTH])
-        } else {
-            None
-        };
-
-        match visitor.visit(entry, node, leaf_data) {
-            SimdVisitStatus::ExitEarly => {
-                exit_early.store(true, AtomicOrdering::Relaxed);
-                return;
-            }
-            SimdVisitStatus::MaybeContinue(mask) => {
-                let bitmask = mask.bitmask();
-
-                for ii in 0..SIMD_WIDTH {
-                    if (bitmask & (1 << ii)) != 0 {
-                        if !node.is_leaf() {
-                            // Internal node, visit the child.
-                            // Un fortunately, we have this check because invalid Aabbs
-                            // return a hit as well.
-                            if node.children[ii] as usize <= self.nodes.len() {
-                                stack.push(node.children[ii]);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        stack
-            .as_slice()
-            .par_iter()
-            .copied()
-            .for_each(|entry| self.traverse_depth_first_node_parallel(visitor, exit_early, entry));
-    }
-
-    /// Performs a simultaneous traversal of two Qbvh using
-    /// parallelism internally for better performances with large tree.
-    pub fn traverse_bvtt_parallel<
-        LeafData2: IndexedData + Sync,
-        Visitor: ParallelSimdSimultaneousVisitor<LeafData, LeafData2>,
-    >(
-        &self,
-        qbvh2: &Qbvh<LeafData2>,
-        visitor: &Visitor,
-    ) {
-        if !self.nodes.is_empty() && !qbvh2.nodes.is_empty() {
-            let exit_early = AtomicBool::new(false);
-            self.traverse_bvtt_node_parallel(
-                qbvh2,
-                visitor,
-                &exit_early,
-                Visitor::Data::default(),
-                (0, 0),
-            );
-        }
-    }
-
-    /// Runs a parallel simultaneous traversal of the sub-tree starting at the given nodes.
-    pub fn traverse_bvtt_node_parallel<
-        LeafData2: IndexedData + Sync,
-        Visitor: ParallelSimdSimultaneousVisitor<LeafData, LeafData2>,
-    >(
-        &self,
-        qbvh2: &Qbvh<LeafData2>,
-        visitor: &Visitor,
-        exit_early: &AtomicBool,
-        data: Visitor::Data,
-        entry: (u32, u32),
-    ) {
-        if exit_early.load(AtomicOrdering::Relaxed) {
-            return;
-        }
-
-        let qbvh1 = self;
-        let node1 = &qbvh1.nodes[entry.0 as usize];
-        let node2 = &qbvh2.nodes[entry.1 as usize];
-
-        const SQUARE_SIMD_WIDTH: usize = SIMD_WIDTH * SIMD_WIDTH;
-        let mut stack: ArrayVec<(u32, u32), SQUARE_SIMD_WIDTH> = ArrayVec::new();
-
-        let leaf_data1 = if node1.is_leaf() {
-            Some(
-                array![|ii| Some(&qbvh1.proxies.get(node1.children[ii] as usize)?.data); SIMD_WIDTH],
-            )
-        } else {
-            None
-        };
-
-        let leaf_data2 = if node2.is_leaf() {
-            Some(
-                array![|ii| Some(&qbvh2.proxies.get(node2.children[ii] as usize)?.data); SIMD_WIDTH],
-            )
-        } else {
-            None
-        };
-
-        let (status, data) = visitor.visit(
-            entry.0, &node1, leaf_data1, entry.1, &node2, leaf_data2, data,
-        );
-
-        match status {
-            SimdSimultaneousVisitStatus::ExitEarly => {
-                exit_early.store(true, AtomicOrdering::Relaxed);
-                return;
-            }
-            SimdSimultaneousVisitStatus::MaybeContinue(mask) => {
-                match (node1.is_leaf(), node2.is_leaf()) {
-                    (true, true) => { /* Can’t go deeper. */ }
-                    (true, false) => {
-                        let mut bitmask = 0;
-                        for ii in 0..SIMD_WIDTH {
-                            bitmask |= mask[ii].bitmask();
-                        }
-
-                        for jj in 0..SIMD_WIDTH {
-                            if (bitmask & (1 << jj)) != 0 {
-                                if node2.children[jj] as usize <= qbvh2.nodes.len() {
-                                    stack.push((entry.0, node2.children[jj]));
-                                }
-                            }
-                        }
-                    }
-                    (false, true) => {
-                        for ii in 0..SIMD_WIDTH {
-                            let bitmask = mask[ii].bitmask();
-
-                            if bitmask != 0 {
-                                if node1.children[ii] as usize <= qbvh1.nodes.len() {
-                                    stack.push((node1.children[ii], entry.1));
-                                }
-                            }
-                        }
-                    }
-                    (false, false) => {
-                        for ii in 0..SIMD_WIDTH {
-                            let bitmask = mask[ii].bitmask();
-
-                            for jj in 0..SIMD_WIDTH {
-                                if (bitmask & (1 << jj)) != 0 {
-                                    if node1.children[ii] as usize <= qbvh1.nodes.len()
-                                        && node2.children[jj] as usize <= qbvh2.nodes.len()
-                                    {
-                                        stack.push((node1.children[ii], node2.children[jj]));
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        stack.as_slice().par_iter().copied().for_each(|entry| {
-            self.traverse_bvtt_node_parallel(qbvh2, visitor, exit_early, data, entry)
-        });
     }
 }

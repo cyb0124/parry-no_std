@@ -9,21 +9,17 @@ use crate::query::ContactManifold;
 #[cfg(feature = "dim2")]
 use crate::shape::Capsule;
 use crate::shape::{HeightField, Shape};
-use crate::utils::hashmap::{Entry, HashMap};
+use alloc::boxed::Box;
+use alloc::vec::Vec;
+use hashbrown::hash_map::Entry;
+use hashbrown::HashMap;
 
-#[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize),
-    archive(check_bytes)
-)]
 #[derive(Clone)]
 struct SubDetector {
     manifold_id: usize,
     timestamp: bool,
 }
 
-#[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
 #[derive(Clone, Default)]
 pub struct HeightFieldShapeContactManifoldsWorkspace {
     timestamp: bool,
@@ -115,7 +111,7 @@ pub fn contact_manifolds_heightfield_shape<ManifoldData, ContactData>(
      */
     // TODO: somehow precompute the Aabb and reuse it?
     let ls_aabb2 = shape2.compute_aabb(pos12).loosened(prediction);
-    let mut old_manifolds = std::mem::take(manifolds);
+    let mut old_manifolds = core::mem::take(manifolds);
 
     heightfield1.map_elements_in_local_aabb(&ls_aabb2, &mut |i, part1| {
         #[cfg(feature = "dim2")]

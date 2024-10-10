@@ -1,11 +1,10 @@
-use log::error;
-use na::Point2;
-use ordered_float::OrderedFloat;
-
 use crate::math::Real;
 use crate::shape::{SegmentPointLocation, Triangle, TriangleOrientation};
-use crate::utils::hashmap::HashMap;
 use crate::utils::{self, SegmentsIntersection};
+use alloc::{vec, vec::Vec};
+use hashbrown::HashMap;
+use na::Point2;
+use ordered_float::OrderedFloat;
 
 const EPS: Real = Real::EPSILON * 100.0;
 
@@ -284,9 +283,8 @@ fn advance(a: usize, aa: &mut usize, n: usize) -> usize {
     (a + 1) % n
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(Debug)]
 pub enum PolygonsIntersectionError {
-    #[error("Infinite loop detected; input polygons are ill-formed.")]
     InfiniteLoop,
 }
 
@@ -312,7 +310,7 @@ pub fn polygons_intersection_points(
         } else if let Some(loc2) = loc2 {
             curr_poly.push(loc2.to_point(poly2))
         } else if !curr_poly.is_empty() {
-            result.push(std::mem::take(&mut curr_poly));
+            result.push(core::mem::take(&mut curr_poly));
         }
     })?;
 
@@ -485,8 +483,8 @@ fn compute_sorted_edge_intersections(
     poly1: &[Point2<Real>],
     poly2: &[Point2<Real>],
 ) -> ([HashMap<EdgeId, Vec<IntersectionPoint>>; 2], usize) {
-    let mut inter1: HashMap<EdgeId, Vec<IntersectionPoint>> = HashMap::default();
-    let mut inter2: HashMap<EdgeId, Vec<IntersectionPoint>> = HashMap::default();
+    let mut inter1: HashMap<EdgeId, Vec<IntersectionPoint>> = HashMap::new();
+    let mut inter2: HashMap<EdgeId, Vec<IntersectionPoint>> = HashMap::new();
     let mut id = 0;
 
     // Find the intersections.

@@ -1,24 +1,16 @@
 use crate::math::{AngVector, AngularInertia, Isometry, Point, Real, Rotation, Vector};
 use crate::utils;
+use alloc::vec::Vec;
+use core::ops::{Add, AddAssign, Sub, SubAssign};
 use na::ComplexField;
 use num::Zero;
-use std::ops::{Add, AddAssign, Sub, SubAssign};
 #[cfg(feature = "dim3")]
-use {na::Matrix3, std::ops::MulAssign};
-
-#[cfg(feature = "rkyv")]
-use rkyv::{bytecheck, CheckBytes};
+use {core::ops::MulAssign, na::Matrix3};
 
 #[cfg_attr(feature = "f32", expect(clippy::unnecessary_cast))]
 const EPSILON: Real = f32::EPSILON as Real;
 
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
-#[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize, CheckBytes),
-    archive(as = "Self")
-)]
 /// The local mass properties of a rigid-body.
 pub struct MassProperties {
     /// The center of mass of a rigid-body expressed in its local-space.
@@ -380,8 +372,7 @@ impl AddAssign<MassProperties> for MassProperties {
     }
 }
 
-#[cfg(feature = "std")]
-impl std::iter::Sum<MassProperties> for MassProperties {
+impl core::iter::Sum<MassProperties> for MassProperties {
     #[cfg(feature = "dim2")]
     fn sum<I>(iter: I) -> Self
     where

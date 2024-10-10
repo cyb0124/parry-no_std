@@ -1,4 +1,4 @@
-use std::fmt;
+use core::fmt;
 
 /// Error indicating that a query is not supported between certain shapes
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -9,6 +9,3 @@ impl fmt::Display for Unsupported {
         f.pad("query not supported between these shapes")
     }
 }
-
-#[cfg(feature = "std")]
-impl std::error::Error for Unsupported {}

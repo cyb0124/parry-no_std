@@ -8,13 +8,9 @@ use crate::query::details::NormalConstraints;
 use crate::query::query_dispatcher::PersistentQueryDispatcher;
 use crate::query::ContactManifold;
 use crate::shape::{Shape, TriMesh};
+use alloc::boxed::Box;
+use alloc::vec::Vec;
 
-#[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize),
-    archive(check_bytes)
-)]
 #[derive(Clone)]
 pub struct TriMeshShapeContactManifoldsWorkspace {
     interferences: Vec<u32>,
@@ -116,12 +112,12 @@ pub fn contact_manifolds_trimesh_shape<ManifoldData, ContactData>(
         new_local_aabb2.maxs += extra_margin;
 
         let local_aabb2 = new_local_aabb2; // .loosened(prediction * 2.0); // TODO: what would be the best value?
-        std::mem::swap(
+        core::mem::swap(
             &mut workspace.old_interferences,
             &mut workspace.interferences,
         );
 
-        std::mem::swap(manifolds, &mut old_manifolds);
+        core::mem::swap(manifolds, &mut old_manifolds);
 
         // This assertion may fire due to the invalid triangle_ids that the
         // near-phase may return (due to SIMD sentinels).

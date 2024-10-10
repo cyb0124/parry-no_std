@@ -19,19 +19,15 @@ the rust programming language.
 #![allow(clippy::manual_range_contains)] // This usually makes it way more verbose that it could be.
 #![allow(clippy::type_complexity)] // Complains about closures that are fairly simple.
 #![doc(html_root_url = "http://docs.rs/parry/0.1.1")]
-#![cfg_attr(not(feature = "std"), no_std)]
-#![cfg_attr(not(feature = "rkyv"), deny(unused_qualifications))] // TODO: deny that everytime
+#![deny(unused_qualifications)]
+#![no_std]
 
 #[cfg(all(
     feature = "simd-is-enabled",
     not(feature = "simd-stable"),
     not(feature = "simd-nightly")
 ))]
-std::compile_error!("The `simd-is-enabled` feature should not be enabled explicitly. Please enable the `simd-stable` or the `simd-nightly` feature instead.");
-#[cfg(all(feature = "simd-is-enabled", feature = "enhanced-determinism"))]
-std::compile_error!(
-    "SIMD cannot be enabled when the `enhanced-determinism` feature is also enabled."
-);
+core::compile_error!("The `simd-is-enabled` feature should not be enabled explicitly. Please enable the `simd-stable` or the `simd-nightly` feature instead.");
 
 macro_rules! array(
     ($callback: expr; SIMD_WIDTH) => {
@@ -47,16 +43,8 @@ macro_rules! array(
     }
 );
 
-#[cfg(all(feature = "alloc", not(feature = "std")))]
-#[cfg_attr(test, macro_use)]
 extern crate alloc;
 
-#[cfg(not(feature = "std"))]
-extern crate core as std;
-
-#[cfg(feature = "serde")]
-#[macro_use]
-extern crate serde;
 #[macro_use]
 extern crate approx;
 extern crate num_traits as num;
@@ -70,7 +58,6 @@ pub mod mass_properties;
 pub mod partitioning;
 pub mod query;
 pub mod shape;
-#[cfg(feature = "std")]
 pub mod transformation;
 pub mod utils;
 

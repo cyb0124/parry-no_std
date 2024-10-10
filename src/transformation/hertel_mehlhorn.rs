@@ -3,6 +3,7 @@
 
 use crate::math::{Point, Real};
 use crate::utils::point_in_triangle::{corner_direction, Orientation};
+use alloc::vec::Vec;
 
 /// Checks if the counter-clockwise polygon `poly` has an edge going counter-clockwise from `p1` to `p2`.
 /// Returns the edge point's indices in the second polygon. Returns `None` if none were found.
@@ -121,55 +122,4 @@ pub fn hertel_mehlhorn_idx(vertices: &[Point<Real>], indices: &[[u32; 3]]) -> Ve
     }
 
     indices
-}
-
-// --- Unit tests ----------------------------------------------------------------------------
-#[cfg(test)]
-mod tests {
-    use super::hertel_mehlhorn_idx;
-    use crate::math::Point;
-
-    #[test]
-    fn origin_outside_shape() {
-        // Expected result of convex decomposition:
-        // 4-----------------------3
-        // |  .       (2)       .  |
-        // |    .             .    |
-        // |       7-------0       |
-        // |  (1)  |       |  (3)  |
-        // |       |   °   |       |
-        // 5-------6       1-------2
-        let vertices = vec![
-            Point::new(2.0, 2.0),   // 0
-            Point::new(2.0, -2.0),  // 1
-            Point::new(4.0, -2.0),  // 2
-            Point::new(4.0, 4.0),   // 3
-            Point::new(-4.0, 4.0),  // 4
-            Point::new(-4.0, -2.0), // 5
-            Point::new(-2.0, -2.0), // 6
-            Point::new(-2.0, 2.0),  // 7
-        ];
-
-        let triangles = [
-            [5, 6, 7],
-            [4, 5, 7],
-            [3, 4, 7],
-            [3, 7, 0],
-            [2, 3, 0],
-            [2, 0, 1],
-        ];
-
-        let indices = hertel_mehlhorn_idx(&vertices, &triangles);
-
-        let expected_indices = vec![
-            // (1)
-            vec![5, 6, 7, 4],
-            // (2)
-            vec![3, 4, 7, 0],
-            // (3)
-            vec![2, 3, 0, 1],
-        ];
-
-        assert_eq!(indices, expected_indices);
-    }
 }

@@ -3,17 +3,8 @@
 use crate::math::{Isometry, Point, Real, Vector};
 use crate::shape::FeatureId;
 
-#[cfg(feature = "rkyv")]
-use rkyv::{bytecheck, CheckBytes};
-
 /// A Ray.
 #[derive(Debug, Clone, Copy)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize, CheckBytes),
-    archive(as = "Self")
-)]
 #[repr(C)]
 pub struct Ray {
     /// Starting point of the ray.
@@ -60,12 +51,6 @@ impl Ray {
 
 /// Structure containing the result of a successful ray cast.
 #[derive(Copy, Clone, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize, CheckBytes),
-    archive(as = "Self")
-)]
 pub struct RayIntersection {
     /// The time of impact of the ray with the object. The exact contact point can be computed
     /// with: `ray.point_at(time_of_impact)` or equivalently `origin + dir * time_of_impact` where `origin` is the origin of the ray;

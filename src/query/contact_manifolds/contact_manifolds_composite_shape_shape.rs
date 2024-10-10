@@ -8,22 +8,18 @@ use crate::query::query_dispatcher::PersistentQueryDispatcher;
 use crate::query::visitors::BoundingVolumeIntersectionsVisitor;
 use crate::query::ContactManifold;
 use crate::shape::{Shape, SimdCompositeShape};
-use crate::utils::hashmap::{Entry, HashMap};
 use crate::utils::IsometryOpt;
+use alloc::boxed::Box;
+use alloc::vec::Vec;
+use hashbrown::hash_map::Entry;
+use hashbrown::HashMap;
 
-#[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize),
-    archive(check_bytes)
-)]
 #[derive(Clone)]
 struct SubDetector {
     manifold_id: usize,
     timestamp: bool,
 }
 
-#[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
 #[derive(Clone, Default)]
 pub struct CompositeShapeShapeContactManifoldsWorkspace {
     timestamp: bool,
@@ -81,7 +77,7 @@ pub fn contact_manifolds_composite_shape_shape<ManifoldData, ContactData>(
 
     // Traverse qbvh1 first.
     let ls_aabb2_1 = shape2.compute_aabb(&pos12).loosened(prediction);
-    let mut old_manifolds = std::mem::take(manifolds);
+    let mut old_manifolds = core::mem::take(manifolds);
 
     let mut leaf1_fn = |leaf1: &u32| {
         composite1.map_part_at(

@@ -2,17 +2,8 @@
 use crate::math::{Real, Vector};
 use na::Unit;
 
-#[cfg(feature = "rkyv")]
-use rkyv::{bytecheck, CheckBytes};
-
 /// A half-space delimited by an infinite plane.
 #[derive(PartialEq, Debug, Clone, Copy)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize, CheckBytes),
-    archive(as = "Self")
-)]
 #[repr(C)]
 pub struct HalfSpace {
     /// The halfspace planar boundary's outward normal.

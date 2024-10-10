@@ -1,15 +1,11 @@
-#[cfg(not(feature = "std"))]
-use na::ComplexField; // for .abs()
-use na::{RealField, Unit};
-
 use crate::math::{Point, Real, Vector};
+use crate::query::gjk::ConstantPoint;
 use crate::query::{
     self, ClosestPoints, NonlinearRigidMotion, QueryDispatcher, ShapeCastHit, ShapeCastStatus,
 };
 use crate::shape::{Shape, SupportMap};
 use crate::utils::WCross;
-
-use crate::query::gjk::ConstantPoint;
+use na::{RealField, Unit};
 use num::Bounded;
 
 /// Enum specifying the behavior of shape-casting when there is a penetration at the starting time.

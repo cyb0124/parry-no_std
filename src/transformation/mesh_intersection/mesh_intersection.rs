@@ -4,13 +4,12 @@ use crate::query::point::point_query::PointQueryWithLocation;
 use crate::query::{visitors::BoundingVolumeIntersectionsSimultaneousVisitor, PointQuery};
 use crate::shape::{TriMesh, Triangle};
 use crate::utils;
+use alloc::collections::BTreeMap;
+use alloc::{vec, vec::Vec};
+use hashbrown::HashSet;
 use na::{Point3, Vector3};
 use rstar::RTree;
 use spade::{ConstrainedDelaunayTriangulation, InsertionError, Triangulation as _};
-use std::collections::BTreeMap;
-use std::collections::HashSet;
-#[cfg(feature = "wavefront")]
-use std::path::PathBuf;
 
 /// Metadata that specifies thresholds to use when making construction choices
 /// in mesh intersections.
@@ -104,8 +103,8 @@ pub fn intersect_meshes_with_tolerances(
 
     mesh1.qbvh().traverse_bvtt(mesh2.qbvh(), &mut visitor);
 
-    let mut deleted_faces1: HashSet<u32> = HashSet::default();
-    let mut deleted_faces2: HashSet<u32> = HashSet::default();
+    let mut deleted_faces1: HashSet<u32> = HashSet::new();
+    let mut deleted_faces2: HashSet<u32> = HashSet::new();
     let mut new_indices1 = vec![];
     let mut new_indices2 = vec![];
 

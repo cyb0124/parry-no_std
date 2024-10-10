@@ -1,27 +1,14 @@
-#[cfg(not(feature = "std"))]
-use na::ComplexField;
-#[cfg(feature = "std")]
-use na::DVector;
-use std::ops::Range;
-
-use na::Point2;
-
 use crate::bounding_volume::Aabb;
 use crate::math::{Real, Vector};
-
 use crate::shape::Segment;
+use core::ops::Range;
+use na::DVector;
+use na::Point2;
 
 /// Indicates if a cell of a heightfield is removed or not. Set this to `false` for
 /// a removed cell.
 pub type HeightFieldCellStatus = bool;
 
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-// TODO: Archive isn’t implemented for VecStorage yet.
-// #[cfg_attr(
-//     feature = "rkyv",
-//     derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize),
-//     archive(check_bytes)
-// )]
 #[derive(Debug, Clone)]
 #[repr(C)]
 /// A 2D heightfield with a generic storage buffer for its heights.
@@ -33,7 +20,6 @@ pub struct HeightField {
     aabb: Aabb,
 }
 
-#[cfg(feature = "std")]
 impl HeightField {
     /// Creates a new 2D heightfield with the given heights and scale factor.
     pub fn new(heights: DVector<Real>, scale: Vector<Real>) -> Self {

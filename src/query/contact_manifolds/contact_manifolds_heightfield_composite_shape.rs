@@ -10,22 +10,18 @@ use crate::query::ContactManifold;
 #[cfg(feature = "dim2")]
 use crate::shape::Capsule;
 use crate::shape::{HeightField, Shape, SimdCompositeShape};
-use crate::utils::hashmap::{Entry, HashMap};
 use crate::utils::IsometryOpt;
+use alloc::boxed::Box;
+use alloc::vec::Vec;
+use hashbrown::hash_map::Entry;
+use hashbrown::HashMap;
 
-#[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize),
-    archive(check_bytes)
-)]
 #[derive(Clone)]
 struct SubDetector {
     manifold_id: usize,
     timestamp: bool,
 }
 
-#[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
 #[derive(Clone, Default)]
 pub struct HeightFieldCompositeShapeContactManifoldsWorkspace {
     timestamp: bool,
@@ -81,7 +77,7 @@ pub fn contact_manifolds_heightfield_composite_shape<ManifoldData, ContactData>(
     let qbvh2 = composite2.qbvh();
     let mut stack2 = Vec::new();
     let ls_aabb2_1 = qbvh2.root_aabb().transform_by(pos12).loosened(prediction);
-    let mut old_manifolds = std::mem::take(manifolds);
+    let mut old_manifolds = core::mem::take(manifolds);
 
     heightfield1.map_elements_in_local_aabb(&ls_aabb2_1, &mut |leaf1, part1| {
         #[cfg(feature = "dim2")]
