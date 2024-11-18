@@ -5,7 +5,7 @@ use crate::query::{
 };
 use crate::shape::{Shape, SupportMap};
 use crate::utils::WCross;
-use na::{ComplexField, RealField, Unit};
+use na::{RealField, Unit};
 use num::Bounded;
 
 /// Enum specifying the behavior of shape-casting when there is a penetration at the starting time.

@@ -8,7 +8,7 @@ use crate::utils;
 use alloc::collections::BinaryHeap;
 use alloc::vec::Vec;
 use core::cmp::Ordering;
-use na::{self, ComplexField, Unit};
+use na::Unit;
 use num::Bounded;
 
 #[derive(Copy, Clone, PartialEq)]

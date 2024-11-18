@@ -5,7 +5,7 @@ use crate::math::{Point, Real, Vector};
 use crate::shape::Segment;
 use crate::shape::{FeatureId, PackedFeatureId, PolygonalFeature, SupportMap};
 use crate::utils::WSign;
-use na::{RealField, Unit};
+use na::Unit;
 
 /// Shape of a box.
 #[derive(PartialEq, Debug, Copy, Clone)]

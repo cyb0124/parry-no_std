@@ -1,6 +1,5 @@
 use crate::math::{Isometry, Real, Vector, DIM};
 use crate::shape::{Cuboid, SupportMap};
-use na::RealField;
 
 /// Computes the separation of two cuboids along `axis1`.
 #[cfg(feature = "dim3")]

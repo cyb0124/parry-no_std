@@ -6,7 +6,6 @@ use crate::query::{PointProjection, PointQueryWithLocation};
 use crate::shape::composite_shape::SimdCompositeShape;
 use crate::shape::{FeatureId, Segment, SegmentPointLocation, Shape, TypedSimdCompositeShape};
 use alloc::vec::Vec;
-use na::ComplexField;
 
 #[derive(Clone, Debug)]
 /// A polyline.

@@ -1,5 +1,4 @@
 use crate::math::Real;
-use na::ComplexField;
 
 /// Ensures the given coordinate doesn’t go out of the bounds of spade’s acceptable values.
 ///

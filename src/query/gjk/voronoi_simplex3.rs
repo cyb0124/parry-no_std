@@ -5,7 +5,6 @@ use crate::shape::{
     Segment, SegmentPointLocation, Tetrahedron, TetrahedronPointLocation, Triangle,
     TrianglePointLocation,
 };
-use na::ComplexField;
 
 /// A simplex of dimension up to 3 that uses Voronoï regions for computing point projections.
 #[derive(Clone, Debug)]

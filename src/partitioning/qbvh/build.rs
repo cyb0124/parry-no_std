@@ -6,7 +6,6 @@ use crate::math::{Point, Real};
 use crate::query::SplitResult;
 use crate::simd::SimdReal;
 use alloc::{vec, vec::Vec};
-use na::ComplexField;
 use simba::simd::SimdValue;
 
 pub struct BuilderProxies<'a, LeafData> {

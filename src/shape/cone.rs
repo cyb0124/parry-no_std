@@ -3,7 +3,6 @@
 use crate::math::{Point, Real, Vector};
 use crate::shape::SupportMap;
 use either::Either;
-use na::{self, RealField};
 use num::Zero;
 
 /// Cone shape with its principal axis aligned with the `y` axis.
