@@ -2,9 +2,12 @@ use super::EPS;
 use crate::math::{Point, Real, Vector};
 use crate::query;
 use crate::shape::{FeatureId, Segment, Triangle};
-use crate::transformation::polygon_intersection::PolylinePointLocation;
+use crate::transformation::polygon_intersection::{
+    PolygonIntersectionTolerances, PolylinePointLocation,
+};
 use crate::utils::WBasis;
 use alloc::{vec, vec::Vec};
+use na::Point2;
 
 #[derive(Copy, Clone, Debug, Default)]
 pub struct TriangleTriangleIntersectionPoint {
@@ -29,9 +32,10 @@ impl Default for TriangleTriangleIntersection {
     }
 }
 
-pub fn triangle_triangle_intersection(
+pub(crate) fn triangle_triangle_intersection(
     tri1: &Triangle,
     tri2: &Triangle,
+    collinearity_epsilon: Real,
 ) -> Option<TriangleTriangleIntersection> {
     let normal1 = tri1.robust_normal();
     let normal2 = tri2.robust_normal();
@@ -114,8 +118,7 @@ pub fn triangle_triangle_intersection(
         let unit_normal2 = normal2.normalize();
         if (tri1.a - tri2.a).dot(&unit_normal2) < EPS {
             let basis = unit_normal2.orthonormal_basis();
-            let proj =
-                |vect: Vector<Real>| na::Point2::new(vect.dot(&basis[0]), vect.dot(&basis[1]));
+            let proj = |vect: Vector<Real>| Point2::new(vect.dot(&basis[0]), vect.dot(&basis[1]));
 
             let mut intersections = vec![];
 
@@ -145,25 +148,32 @@ pub fn triangle_triangle_intersection(
                 ),
             };
 
-            crate::transformation::convex_polygons_intersection(&poly1, &poly2, |pt1, pt2| {
-                let intersection = match (pt1, pt2) {
-                    (Some(loc1), Some(loc2)) => {
-                        let (_f1, p1) = convert_loc(loc1, pts1);
-                        let (_f2, _p2) = convert_loc(loc2, pts2);
-                        TriangleTriangleIntersectionPoint { p1 }
-                    }
-                    (Some(loc1), None) => {
-                        let (_f1, p1) = convert_loc(loc1, pts1);
-                        TriangleTriangleIntersectionPoint { p1 }
-                    }
-                    (None, Some(loc2)) => {
-                        let (_f2, p2) = convert_loc(loc2, pts2);
-                        TriangleTriangleIntersectionPoint { p1: p2 }
-                    }
-                    (None, None) => unreachable!(),
-                };
-                intersections.push(intersection);
-            });
+            crate::transformation::convex_polygons_intersection_with_tolerances(
+                &poly1,
+                &poly2,
+                PolygonIntersectionTolerances {
+                    collinearity_epsilon,
+                },
+                |pt1, pt2| {
+                    let intersection = match (pt1, pt2) {
+                        (Some(loc1), Some(loc2)) => {
+                            let (_f1, p1) = convert_loc(loc1, pts1);
+                            let (_f2, _p2) = convert_loc(loc2, pts2);
+                            TriangleTriangleIntersectionPoint { p1 }
+                        }
+                        (Some(loc1), None) => {
+                            let (_f1, p1) = convert_loc(loc1, pts1);
+                            TriangleTriangleIntersectionPoint { p1 }
+                        }
+                        (None, Some(loc2)) => {
+                            let (_f2, p2) = convert_loc(loc2, pts2);
+                            TriangleTriangleIntersectionPoint { p1: p2 }
+                        }
+                        (None, None) => unreachable!(),
+                    };
+                    intersections.push(intersection);
+                },
+            );
 
             Some(TriangleTriangleIntersection::Polygon(intersections))
         } else {
